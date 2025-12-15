@@ -1,30 +1,30 @@
-# 🤖 Botasaurus 验证码解决集成方案
+# 🤖 Botasaurus Captcha Solver Integration
 
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/omkarcloud/botasaurus?style=social)](https://github.com/omkarcloud/botasaurus)
 
-一个强大且开箱即用的 Python 模板，用于在网络爬虫项目中，结合 **Botasaurus**（反检测）和 **CapSolver**（验证码解决），自动绕过 reCAPTCHA v2、reCAPTCHA v3 和 Cloudflare Turnstile。
+A robust, ready-to-use Python template for bypassing reCAPTCHA v2, reCAPTCHA v3, and Cloudflare Turnstile in web scraping projects using **Botasaurus** (for anti-detection) and **CapSolver** (for solving).
 
 ---
 
-## ✨ 主要特性
+## ✨ Features
 
-- **无缝集成:** 结合了 Botasaurus 的反检测能力和 CapSolver 的 API 优势。
-- **多验证码支持:** 提供了 reCAPTCHA v2、v3 和 Cloudflare Turnstile 的完整示例。
-- **清晰架构:** 配置、辅助函数和示例代码分离，易于维护和扩展。
-- **令牌注入:** 演示了如何使用 Botasaurus 将已解决的验证码令牌正确注入到浏览器上下文中。
+- **Seamless Integration:** Combines the power of Botasaurus's anti-detection with CapSolver's API.
+- **Multi-Captcha Support:** Ready-to-use examples for reCAPTCHA v2, v3, and Cloudflare Turnstile.
+- **Clean Architecture:** Separated configuration, helper functions, and examples for easy maintenance.
+- **Token Injection:** Demonstrates how to correctly inject the solved token back into the browser context using Botasaurus.
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 1. 前置条件
+### 1. Prerequisites
 
 - Python 3.8+
-- 一个 CapSolver API 密钥（可从 [CapSolver 控制台](https://dashboard.capsolver.com/dashboard/overview/?utm_source=github&utm_medium=readme&utm_campaign=manus-rewrite-botasaurus) 获取）
+- A CapSolver API Key (Get yours from the [CapSolver Dashboard](https://dashboard.capsolver.com/dashboard/overview/?utm_source=github&utm_medium=readme&utm_campaign=manus-rewrite-botasaurus))
 
-### 2. 安装
+### 2. Installation
 
-克隆仓库并安装依赖：
+Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/your-username/this-repo.git
@@ -32,106 +32,157 @@ cd this-repo
 pip install -r requirements.txt
 ```
 
-### 3. 配置
+### 3. Configuration
 
-在项目根目录创建 `.env` 文件并添加您的 API 密钥：
+Create a `.env` file in the project root and add your API key:
 
 ```env
 # .env
 CAPSOLVER_API_KEY=CAP-YOUR_API_KEY_HERE
 ```
 
-### 4. 运行示例
+### 4. Run Examples
 
-执行 `examples/` 目录下的任一示例脚本：
+Execute any of the example scripts located in the `examples/` directory:
 
 ```bash
-# reCAPTCHA v2 示例
+# Example for reCAPTCHA v2
 python examples/recaptcha_v2.py
 
-# Cloudflare Turnstile 示例
+# Example for Cloudflare Turnstile
 python examples/turnstile.py
 ```
 
 ---
 
-## 📂 项目结构
+## 📂 Project Structure
 
 ```
 .
 ├── README.md
-├── README_zh.md (中文说明)
 ├── LICENSE
 ├── CONTRIBUTING.md
 ├── requirements.txt
-├── .env (已忽略)
+├── .env (ignored by git)
 └── src/
-    ├── config.py             # 加载 API 密钥和定义 API 端点
-    └── capsolver_helper.py   # 用于创建和轮询 CapSolver 任务的核心函数
+    ├── config.py             # Loads API key and defines endpoints
+    └── capsolver_helper.py   # Core functions for creating and polling CapSolver tasks
 └── examples/
-    ├── recaptcha_v2.py       # reCAPTCHA v2 完整示例
-    ├── recaptcha_v3.py       # reCAPTCHA v3 完整示例
-    └── turnstile.py          # Cloudflare Turnstile 完整示例
+    ├── recaptcha_v2.py       # Complete example for reCAPTCHA v2
+    ├── recaptcha_v3.py       # Complete example for reCAPTCHA v3
+    └── turnstile.py          # Complete example for Cloudflare Turnstile
 ```
 
 ---
 
-## ⚙️ 核心实现
+## ⚙️ Core Implementation
 
-核心逻辑分为配置模块和解决辅助函数。
+The core logic is split into configuration and the solving helper.
 
 ### `src/config.py`
 
-处理环境变量加载和 API 端点定义。
+Handles environment variable loading and API endpoint definitions.
 
 ```python
 # src/config.py
-# ... (代码内容与英文版相同) ...
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+ROOT_DIR = Path(__file__).parent.parent
+load_dotenv(ROOT_DIR / ".env")
+
+class Config:
+    """Configuration class for CapSolver integration."""
+    CAPSOLVER_API_KEY: str = os.getenv("CAPSOLVER_API_KEY", "")
+    CAPSOLVER_API_URL = "https://api.capsolver.com"
+    CREATE_TASK_ENDPOINT = f"{CAPSOLVER_API_URL}/createTask"
+    GET_RESULT_ENDPOINT = f"{CAPSOLVER_API_URL}/getTaskResult"
+
+    @classmethod
+    def validate(cls) -> bool:
+        if not cls.CAPSOLVER_API_KEY:
+            print("Error: CAPSOLVER_API_KEY not set! Check your .env file.")
+            return False
+        return True
 ```
 
 ### `src/capsolver_helper.py`
 
-包含用于解决不同验证码类型的可重用函数。
+Contains the reusable functions for solving different captcha types.
 
 ```python
-# src/capsolver_helper.py (README 简化版)
-# ... (代码内容与英文版相同) ...
+# src/capsolver_helper.py (Simplified for README)
+import time
+import requests
+from src.config import Config
+
+def _poll_task_result(payload: dict, timeout: int) -> dict:
+    # ... (Polling logic as described in the article) ...
+    pass
+
+def solve_recaptcha_v2(website_url: str, website_key: str, is_invisible: bool = False) -> dict:
+    """Solves reCAPTCHA v2 and returns the gRecaptchaResponse token."""
+    if not Config.validate():
+        raise Exception("Invalid configuration")
+    
+    task = {
+        "type": "ReCaptchaV2TaskProxyLess",
+        "websiteURL": website_url,
+        "websiteKey": website_key,
+        "isInvisible": is_invisible
+    }
+    # ... (Task creation and polling via _poll_task_result) ...
+    # Returns {'gRecaptchaResponse': '...'}
+    pass
+
+def solve_recaptcha_v3(website_url: str, website_key: str, page_action: str) -> dict:
+    """Solves reCAPTCHA v3 and returns the gRecaptchaResponse token."""
+    # ... (Implementation similar to v2, but with pageAction) ...
+    # Returns {'gRecaptchaResponse': '...'}
+    pass
+
+def solve_turnstile(website_url: str, website_key: str, action: str = None) -> dict:
+    """Solves Cloudflare Turnstile and returns the token."""
+    # ... (Implementation similar to v2, but with AntiTurnstileTaskProxyLess) ...
+    # Returns {'token': '...'}
+    pass
 ```
 
 ---
 
-## 💡 最佳实践
+## 💡 Best Practices
 
-| 实践 | 描述 |
+| Practice | Description |
 | :--- | :--- |
-| **即时使用** | 验证码令牌有效期极短（约 2 分钟）。在收到令牌后，必须立即注入并提交。 |
-| **错误处理** | 始终使用 `try...except` 块来处理 API 调用失败，确保程序健壮性。 |
-| **速率限制** | 在操作之间使用 `driver.sleep()` 增加延迟，模拟人类行为，避免触发反爬机制。 |
-| **配置验证** | 在进行任何 API 调用之前，使用 `Config.validate()` 方法检查 API 密钥是否配置正确。 |
+| **Immediate Use** | Captcha tokens expire quickly (~2 minutes). Inject and submit immediately after receiving the token. |
+| **Error Handling** | Always wrap API calls in `try...except` blocks to handle network or API failures gracefully. |
+| **Rate Limiting** | Use `driver.sleep()` between actions to mimic human behavior and avoid triggering anti-bot measures. |
+| **Configuration** | Use the `Config.validate()` method before making any API calls. |
 
 ---
 
-## 🎁 特别优惠
+## 🎁 Special Offer
 
-立即提升您的自动化预算！充值 CapSolver 账户时使用奖励代码 **CAPN**，即可在每次充值时额外获得 **5% 的奖励金**——无上限！
+Boost your automation budget instantly! Use bonus code **CAPN** when topping up your CapSolver account to get an extra **5% bonus** on every recharge—with no limits!
 
-立即在您的 [CapSolver 控制台](https://dashboard.capsolver.com/dashboard/overview/?utm_source=github&utm_medium=readme&utm_campaign=manus-rewrite-botasaurus) 兑换吧！
+Redeem it now in your [CapSolver Dashboard](https://dashboard.capsolver.com/dashboard/overview/?utm_source=github&utm_medium=readme&utm_campaign=manus-rewrite-botasaurus)!
 
 ![](https://assets.capsolver.com/prod/posts/aws-waf-captcha-solution/qMMCl6UIh7Ob-d2b5ca33bd970f64a6301fa75ae2eb22.png)
 
 ---
 
-## 🤝 贡献
+## 🤝 Contributing
 
-我们欢迎社区贡献！请参阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解如何提交拉取请求、报告错误和建议功能。
+We welcome contributions! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to submit pull requests, report bugs, and suggest features.
 
-## 📄 许可证
+## 📄 License
 
-本项目采用 MIT 许可证 - 详情请参阅 [LICENSE](LICENSE) 文件。
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔗 资源链接
+## 🔗 Resources
 
-- [Botasaurus GitHub 仓库](https://github.com/omkarcloud/botasaurus)
-- [CapSolver 控制台](https://dashboard.capsolver.com/dashboard/overview/?utm_source=github&utm_medium=readme&utm_campaign=manus-rewrite-botasaurus)
-- [CapSolver 验证码检测扩展](https://chromewebstore.google.com/detail/capsolver-captcha-solver)
-- [识别验证码参数指南](https://www.capsolver.com/blog/Extension/identify-any-captcha-and-parameters)
+- [Botasaurus GitHub Repository](https://github.com/omkarcloud/botasaurus)
+- [CapSolver Dashboard](https://dashboard.capsolver.com/dashboard/overview/?utm_source=github&utm_medium=readme&utm_campaign=manus-rewrite-botasaurus)
+- [CapSolver Captcha Detector Extension](https://chromewebstore.google.com/detail/capsolver-captcha-solver)
+- [Guide on Identifying Captcha Parameters](https://www.capsolver.com/blog/Extension/identify-any-captcha-and-parameters)
